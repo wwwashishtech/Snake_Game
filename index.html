@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nokia Snake Game</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); padding: 20px; }
+    .container { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+    .nokia-phone { background: linear-gradient(to bottom, #d4d4d4, #8a8a8a); border-radius: 40px; padding: 25px 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 5px solid #333; max-width: 380px; width: 100%; position: relative; }
+    .phone-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px;
+      background: linear-gradient(to right, #003399, #0066cc); color: white; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+    .nokia-logo { font-weight: bold; font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); letter-spacing: 1px; }
+    .phone-screen { background-color: #9cb97e; border: 5px solid #333; border-radius: 10px; padding: 10px; margin-bottom: 25px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
+    .game-header { display: flex; justify-content: space-between; padding: 8px; background-color: #4e6c3e;
+      border-radius: 5px; margin-bottom: 10px; color: white; font-weight: bold; font-size: 14px; }
+    #game-canvas { background-color: #8aa677; display: block; margin: 0 auto; border: 2px solid #333; }
+    .controls-section { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+    .control-row { display: flex; justify-content: space-between; width: 100%; gap: 10px; }
+    .nav-button { height: 50px; background: linear-gradient(to bottom, #555, #333); border: none; border-radius: 8px; color: white;
+      font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.1s; flex: 1; }
+    .nav-button:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .center-button { background: radial-gradient(circle at 30% 30%, #e33, #a00); font-weight: bold; flex: 0 0 60px; height: 60px;
+      border-radius: 50%; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; }
+    .center-button:active { transform: scale(0.95); box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+    .soft-key { padding: 10px; background: linear-gradient(to bottom, #555, #222); border: none; border-radius: 5px; color: white;
+      font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); flex: 1; font-size: 14px; }
+    .call-key { padding: 10px; background: linear-gradient(to bottom, #5a5, #282); border: none; border-radius: 20px; color: white;
+      font-weight: bold; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); flex: 1; font-size: 14px; }
+    .end-key { background: linear-gradient(to bottom, #d55, #822); }
+    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 15px; }
+    .keypad-button { height: 45px; background: linear-gradient(to bottom, #555, #333); border: none; border-radius: 8px; color: white;
+      font-size: 16px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.1s; padding: 5px; }
+    .keypad-button:active { transform: translateY(2px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .keypad-button .main-label { font-size: 16px; font-weight: bold; }
+    .keypad-button .sub-label { font-size: 9px; margin-top: 2px; }
+    .sound-controls { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; }
+    .sound-btn { padding: 8px 12px; background: linear-gradient(to bottom, #555, #333); border: none; border-radius: 5px; 
+      color: white; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+    .instructions { background-color: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; max-width: 400px; width: 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .instructions h2 { color: #333; margin-bottom: 15px; text-align: center; }
+    .instructions p { margin-bottom: 10px; color: #555; }
+    .key { display: inline-block; padding: 2px 8px; background: #eee; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+    @media (max-width:768px){ body{padding:5px;background:#333;} .container{width:100%;max-width:100%;}
+      .nokia-phone{max-width:100%;padding:15px 10px;border-radius:30px;} .instructions{display:none;}
+      .nav-button{height:45px;font-size:18px;} .keypad-button{height:40px;} }
+    @media (max-width:480px){ .nokia-phone{padding:12px 8px;} .nav-button{height:40px;font-size:16px;}
+      .soft-key,.call-key{font-size:12px;padding:8px;} .keypad-button{height:35px;font-size:14px;}
+      .keypad-button .main-label{font-size:14px;} .keypad-button .sub-label{font-size:8px;} }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="nokia-phone">
+    <div class="phone-header">
+      <div class="nokia-logo">NOKIA 3310</div>
+      <div class="phone-time">14:25</div>
+      <div class="battery-indicator"><i class="fas fa-battery-full"></i></div>
+    </div>
+    <div class="phone-screen">
+      <div class="game-header">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>SNAKE</div>
+        <div>HI: <span id="high-score">0</span></div>
+      </div>
+      <canvas id="game-canvas" width="300" height="300"></canvas>
+    </div>
+    <div class="controls-section">
+      <div class="control-row">
+        <button class="soft-key" id="left-soft">Menu</button>
+        <button class="nav-button" id="up-btn">↑</button>
+        <button class="soft-key" id="right-soft">Back</button>
+      </div>
+      <div class="control-row">
+        <button class="nav-button" id="left-btn">←</button>
+        <button class="nav-button center-button" id="ok-btn">OK</button>
+        <button class="nav-button" id="right-btn">→</button>
+      </div>
+      <div class="control-row">
+        <button class="call-key" id="call-btn"><i class="fas fa-phone"></i> Call</button>
+        <button class="nav-button" id="down-btn">↓</button>
+        <button class="call-key end-key" id="end-btn"><i class="fas fa-phone-slash"></i> End</button>
+      </div>
+      <div class="keypad">
+        <button class="keypad-button"><span class="main-label">1</span></button>
+        <button class="keypad-button"><span class="main-label">2</span><span class="sub-label">abc</span></button>
+        <button class="keypad-button"><span class="main-label">3</span><span class="sub-label">def</span></button>
+        <button class="keypad-button"><span class="main-label">4</span><span class="sub-label">ghi</span></button>
+        <button class="keypad-button"><span class="main-label">5</span><span class="sub-label">jkl</span></button>
+        <button class="keypad-button"><span class="main-label">6</span><span class="sub-label">mno</span></button>
+        <button class="keypad-button"><span class="main-label">7</span><span class="sub-label">pqrs</span></button>
+        <button class="keypad-button"><span class="main-label">8</span><span class="sub-label">tuv</span></button>
+        <button class="keypad-button"><span class="main-label">9</span><span class="sub-label">wxyz</span></button>
+        <button class="keypad-button"><span class="main-label">*</span></button>
+        <button class="keypad-button"><span class="main-label">0</span></button>
+        <button class="keypad-button"><span class="main-label">#</span></button>
+      </div>
+      <div class="sound-controls">
+        <button class="sound-btn" id="bgm-toggle">🔊 BGM On</button>
+        <button class="sound-btn" id="sfx-toggle">🔊 SFX On</button>
+      </div>
+    </div>
+  </div>
+  <div class="instructions">
+    <h2>How to Play</h2>
+    <p>• Use the directional buttons or arrow keys to control the snake</p>
+    <p>• Eat the food (red apple) to grow longer and earn points</p>
+    <p>• Avoid hitting the walls or yourself</p>
+    <p>• Press <span class="key">Back</span> to pause, <span class="key">OK</span> to resume</p>
+    <p>• Press <span class="key">Enter</span> to start a new game</p>
+    <p>• Use the sound controls to toggle background music and sound effects</p>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const scoreElement = document.getElementById('score');
+  const highScoreElement = document.getElementById('high-score');
+  const gridSize = 15;
+  const gridWidth = canvas.width / gridSize;
+  const gridHeight = canvas.height / gridSize;
+  
+  let snake = [], food = {}, direction = 'right', nextDirection = 'right';
+  let score = 0, highScore = localStorage.getItem('snakeHighScore') || 0, gameSpeed = 120;
+  let gameRunning = false, gameLoop;
+  
+  highScoreElement.textContent = highScore;
+  
+    // Create audio elements using file paths
+const eatSound = new Audio("music/eating.mp3");       // Replace with your actual eat sound file path
+const bgmSound = new Audio("music/background.mp3"); // Replace with your background music file path
+const gameoverSound = new Audio("music/gameover.mp3"); // Replace with your game over sound file path
+
+  
+  // Set sound properties
+  eatSound.volume = 0.7;
+  bgmSound.volume = 0.5;
+  gameoverSound.volume = 0.7;
+  bgmSound.loop = true;
+  
+  let bgmEnabled = true;
+  let sfxEnabled = true;
+  
+  // Set initial button labels
+  document.getElementById('bgm-toggle').textContent = '🔊 BGM On';
+  document.getElementById('sfx-toggle').textContent = '🔊 SFX On';
+  
+  // Toggle background music
+  document.getElementById('bgm-toggle').addEventListener('click', function() {
+    bgmEnabled = !bgmEnabled;
+    this.textContent = bgmEnabled ? '🔊 BGM On' : '🔇 BGM Off';
+    if (bgmEnabled && gameRunning) {
+      bgmSound.play().catch(e => console.log("Autoplay prevented. User interaction needed."));
+    } else {
+      bgmSound.pause();
+    }
+  });
+  
+  // Toggle sound effects
+  document.getElementById('sfx-toggle').addEventListener('click', function() {
+    sfxEnabled = !sfxEnabled;
+    this.textContent = sfxEnabled ? '🔊 SFX On' : '🔇 SFX Off';
+  });
+
+  function drawSnakeSegment(x, y, isHead) {
+    ctx.fillStyle = isHead ? '#2c511d' : '#4e6c3e';
+    ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+    ctx.strokeStyle = '#223315';
+    ctx.strokeRect(x * gridSize, y * gridSize, gridSize, gridSize);
+    
+    if (isHead) {
+      ctx.fillStyle = 'white';
+      if (direction === 'right') {
+        ctx.fillRect((x + 0.7) * gridSize, (y + 0.2) * gridSize, 3, 3);
+        ctx.fillRect((x + 0.7) * gridSize, (y + 0.7) * gridSize, 3, 3);
+      } else if (direction === 'left') {
+        ctx.fillRect((x + 0.2) * gridSize, (y + 0.2) * gridSize, 3, 3);
+        ctx.fillRect((x + 0.2) * gridSize, (y + 0.7) * gridSize, 3, 3);
+      } else if (direction === 'up') {
+        ctx.fillRect((x + 0.2) * gridSize, (y + 0.2) * gridSize, 3, 3);
+        ctx.fillRect((x + 0.7) * gridSize, (y + 0.2) * gridSize, 3, 3);
+      } else if (direction === 'down') {
+        ctx.fillRect((x + 0.2) * gridSize, (y + 0.7) * gridSize, 3, 3);
+        ctx.fillRect((x + 0.7) * gridSize, (y + 0.7) * gridSize, 3, 3);
+      }
+    }
+  }
+  
+  function drawFood(x, y) {
+    ctx.fillStyle = '#d33';
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * gridSize, (y + 0.5) * gridSize, gridSize / 2 - 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#663300';
+    ctx.fillRect((x + 0.45) * gridSize, (y + 0.1) * gridSize, 2, 5);
+    ctx.fillStyle = '#ff6666';
+    ctx.beginPath();
+    ctx.arc((x + 0.3) * gridSize, (y + 0.4) * gridSize, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  function initGame() {
+    snake = [{x: 5, y: 10}, {x: 4, y: 10}, {x: 3, y: 10}];
+    generateFood();
+    score = 0;
+    scoreElement.textContent = score;
+    direction = 'right';
+    nextDirection = 'right';
+    gameSpeed = 120;
+  }
+  
+  function generateFood() {
+    food = {
+      x: Math.floor(Math.random() * gridWidth),
+      y: Math.floor(Math.random() * gridHeight)
+    };
+    
+    for (let i = 0; i < snake.length; i++) {
+      if (snake[i].x === food.x && snake[i].y === food.y) {
+        return generateFood();
+      }
+    }
+  }
+  
+  function draw() {
+    ctx.fillStyle = '#8aa677';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = 0; i < snake.length; i++) {
+      drawSnakeSegment(snake[i].x, snake[i].y, i === 0);
+    }
+    
+    drawFood(food.x, food.y);
+  }
+  
+  function moveSnake() {
+    direction = nextDirection;
+    const head = {x: snake[0].x, y: snake[0].y};
+    
+    if (direction === 'up') head.y--;
+    else if (direction === 'down') head.y++;
+    else if (direction === 'left') head.x--;
+    else if (direction === 'right') head.x++;
+    
+    if (head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight) {
+      gameOver();
+      return;
+    }
+    
+    for (let i = 0; i < snake.length; i++) {
+      if (snake[i].x === head.x && snake[i].y === head.y) {
+        gameOver();
+        return;
+      }
+    }
+    
+    snake.unshift(head);
+    
+    if (head.x === food.x && head.y === food.y) {
+      if (sfxEnabled) {
+        eatSound.currentTime = 0;
+        eatSound.play().catch(e => console.log("Sound play prevented."));
+      }
+      score += 10;
+      scoreElement.textContent = score;
+      generateFood();
+      if (gameSpeed > 70) gameSpeed -= 2;
+      
+      if (score > highScore) {
+        highScore = score;
+        highScoreElement.textContent = highScore;
+        localStorage.setItem('snakeHighScore', highScore);
+      }
+    } else {
+      snake.pop();
+    }
+  }
+  
+  function gameUpdate() {
+    moveSnake();
+    draw();
+  }
+  
+  function startGame() {
+    if (gameRunning) return;
+    initGame();
+    gameRunning = true;
+    clearInterval(gameLoop);
+    gameLoop = setInterval(gameUpdate, gameSpeed);
+    
+    if (bgmEnabled) {
+      bgmSound.currentTime = 0;
+      bgmSound.play().catch(e => console.log("Autoplay prevented. User interaction needed."));
+    }
+  }
+  
+  function pauseGame() {
+    if (!gameRunning) return;
+    gameRunning = false;
+    clearInterval(gameLoop);
+    bgmSound.pause();
+  }
+  
+  function resumeGame() {
+    if (gameRunning) return;
+    gameRunning = true;
+    gameLoop = setInterval(gameUpdate, gameSpeed);
+    if (bgmEnabled) {
+      bgmSound.play().catch(e => console.log("Autoplay prevented. User interaction needed."));
+    }
+  }
+  
+  function gameOver() {
+    gameRunning = false;
+    clearInterval(gameLoop);
+    bgmSound.pause();
+    
+    if (sfxEnabled) {
+      gameoverSound.currentTime = 0;
+      gameoverSound.play().catch(e => console.log("Sound play prevented."));
+    }
+    
+    setTimeout(() => {
+      alert(`Game Over! Your score: ${score}`);
+    }, 100);
+  }
+
+  // Controls
+  document.getElementById('up-btn').onclick = () => { if (direction !== 'down') nextDirection = 'up'; };
+  document.getElementById('down-btn').onclick = () => { if (direction !== 'up') nextDirection = 'down'; };
+  document.getElementById('left-btn').onclick = () => { if (direction !== 'right') nextDirection = 'left'; };
+  document.getElementById('right-btn').onclick = () => { if (direction !== 'left') nextDirection = 'right'; };
+  document.getElementById('ok-btn').onclick = () => { if (!gameRunning) startGame(); };
+  document.getElementById('left-soft').onclick = () => alert('📱 Made by Ashish Vishwakarma');
+  document.getElementById('right-soft').onclick = () => { 
+    if (gameRunning) {
+      pauseGame(); 
+      alert('⏸ Game Paused\nPress OK to Resume');
+    } else {
+      resumeGame();
+    }
+  };
+  document.getElementById('call-btn').onclick = () => alert('Calling...\n\n+917039716954');
+  document.getElementById('end-btn').onclick = () => { 
+    if (gameRunning) pauseGame(); 
+    alert('Call ended.'); 
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowUp' && direction !== 'down') nextDirection = 'up';
+    else if (e.key === 'ArrowDown' && direction !== 'up') nextDirection = 'down';
+    else if (e.key === 'ArrowLeft' && direction !== 'right') nextDirection = 'left';
+    else if (e.key === 'ArrowRight' && direction !== 'left') nextDirection = 'right';
+    else if (e.key === 'Enter' || e.key === ' ') { 
+      if (!gameRunning) startGame(); 
+    }
+    else if (e.key === 'Escape' || e.key === 'p') { 
+      if (gameRunning) {
+        pauseGame(); 
+        alert('⏸ Game Paused\nPress OK to Resume');
+      } else {
+        resumeGame();
+      }
+    }
+  });
+  
+  // Initial draw
+  initGame();
+  draw();
+});
+</script>
+</body>
+</html>
